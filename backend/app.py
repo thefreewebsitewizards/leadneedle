@@ -185,20 +185,26 @@ def handle_form_submission(sheet_name, recipient_email):
     try:
         print(f"🔍 Starting form submission for sheet: {sheet_name}")
         
-        # --- FIX: Use request.get_json() to parse JSON data from frontend ---
-        data = request.get_json()
+        # Handle both JSON and form data
+        data = None
+        if request.is_json:
+            print("📋 Processing JSON data")
+            data = request.get_json()
+        else:
+            print("📋 Processing form data")
+            data = request.form.to_dict()
+        
         if not data:
-            print("❌ No JSON data received in request body")
-            raise ValueError("No JSON data received in the request body.")
+            print("❌ No data received in request body")
+            raise ValueError("No data received in the request body.")
         
         print(f"📝 Received form data: {list(data.keys())}")
-        # --- END FIX ---
 
         form_data = {
             'firstName': data.get('firstName'),
             'lastName': data.get('lastName'), # Added for completeness if frontend sends it
             'email': data.get('email'),
-            'phoneNumber': data.get('phoneNumber'),
+            'phoneNumber': data.get('phoneNumber') or data.get('phone'), # Handle both field names
             'websiteName': data.get('websiteName'),
             'websiteDescription': data.get('websiteDescription'),
             'hasWebsite': data.get('hasWebsite'),
@@ -282,12 +288,28 @@ def submit_wizard_form():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/submit', methods=['POST'])
+@app.route('/submit', methods=['POST', 'OPTIONS'])
 def submit_contact_form():
-    # Note: If this route is also expecting JSON, it will use request.get_json() as well.
-    # If it's a different form sending application/x-www-form-urlencoded,
-    # you might need a separate handler or more robust content-type checking.
-    return handle_form_submission("Submissions", "dylan@leadneedle.com")
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+    
+    try:
+        print("🚀 Submit contact form endpoint called")
+        # Note: If this route is also expecting JSON, it will use request.get_json() as well.
+        # If it's a different form sending application/x-www-form-urlencoded,
+        # you might need a separate handler or more robust content-type checking.
+        result = handle_form_submission("Submissions", "dylan@leadneedle.com")
+        return jsonify(result)
+    except Exception as e:
+        print(f"❌ Error in submit_contact_form: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/privacy')
 def redirect_privacy():
