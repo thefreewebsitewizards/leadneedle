@@ -277,7 +277,7 @@ def handle_form_submission(sheet_name, recipient_email):
         # TODO: Implement async email sending or fix SMTP timeout issues
         
         print("✅ Form submission completed successfully")
-        return jsonify({"status": "success", "message": "Form submitted successfully!"}), 200
+        return {"status": "success", "message": "Form submitted successfully!"}
     except Exception as e:
         print(f"❌ Form submission error for '{sheet_name}': {e}")
         import traceback
