@@ -183,10 +183,15 @@ https://thefreewebsitewizards.com
 
 def handle_form_submission(sheet_name, recipient_email):
     try:
+        print(f"🔍 Starting form submission for sheet: {sheet_name}")
+        
         # --- FIX: Use request.get_json() to parse JSON data from frontend ---
         data = request.get_json()
         if not data:
+            print("❌ No JSON data received in request body")
             raise ValueError("No JSON data received in the request body.")
+        
+        print(f"📝 Received form data: {list(data.keys())}")
         # --- END FIX ---
 
         form_data = {
@@ -202,38 +207,60 @@ def handle_form_submission(sheet_name, recipient_email):
             'message': data.get('message', data.get('websiteDescription', '')) # Use message if present, fallback to description
         }
 
-        sheet = get_google_sheet(sheet_name)
-        row = [
-            form_data['timestamp'],
-            form_data.get('firstName', ''),
-            form_data.get('email', ''),
-            form_data.get('phoneNumber', ''),
-            form_data.get('hasWebsite', ''),
-            form_data.get('websiteName', ''),
-            form_data.get('websiteDescription', '')
-        ]
-        # Ensure all values are strings before appending to Google Sheet
-        row = [str(x) for x in row]
-        sheet.append_row(row)
-        print(f"✅ Data appended to Google Sheet '{sheet_name}'")
+        print("🔗 Attempting to connect to Google Sheets...")
+        try:
+            sheet = get_google_sheet(sheet_name)
+            print(f"✅ Successfully connected to Google Sheet: {sheet_name}")
+        except Exception as sheet_error:
+            print(f"❌ Google Sheets connection failed: {sheet_error}")
+            # Continue without Google Sheets for now
+            sheet = None
 
+        if sheet:
+            try:
+                row = [
+                    form_data['timestamp'],
+                    form_data.get('firstName', ''),
+                    form_data.get('email', ''),
+                    form_data.get('phoneNumber', ''),
+                    form_data.get('hasWebsite', ''),
+                    form_data.get('websiteName', ''),
+                    form_data.get('websiteDescription', '')
+                ]
+                # Ensure all values are strings before appending to Google Sheet
+                row = [str(x) for x in row]
+                sheet.append_row(row)
+                print(f"✅ Data appended to Google Sheet '{sheet_name}'")
+            except Exception as append_error:
+                print(f"❌ Failed to append to Google Sheet: {append_error}")
 
+        print("📧 Attempting to send notification email...")
         # Send notification email to admin
-        if not send_notification_email(form_data, recipient=recipient_email):
-            print("Failed to send admin notification email.")
-        else:
-            print("✅ Admin notification email sent.")
+        try:
+            if send_notification_email(form_data, recipient=recipient_email):
+                print("✅ Admin notification email sent.")
+            else:
+                print("⚠️ Failed to send admin notification email.")
+        except Exception as email_error:
+            print(f"❌ Admin email error: {email_error}")
 
+        print("📧 Attempting to send confirmation email...")
         # Send confirmation email to the submitter
-        if not send_confirmation_email(form_data):
-            print("Failed to send user confirmation email.")
-        else:
-            print("✅ User confirmation email sent.")
+        try:
+            if send_confirmation_email(form_data):
+                print("✅ User confirmation email sent.")
+            else:
+                print("⚠️ Failed to send user confirmation email.")
+        except Exception as confirm_error:
+            print(f"❌ Confirmation email error: {confirm_error}")
 
+        print("✅ Form submission completed successfully")
         return jsonify({"status": "success", "message": "Form submitted successfully!"}), 200
     except Exception as e:
-        print(f"Form submission error for '{sheet_name}': {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        print(f"❌ Form submission error for '{sheet_name}': {e}")
+        import traceback
+        print(f"📋 Full traceback: {traceback.format_exc()}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @app.route('/submit-wizard', methods=['POST'])
 def submit_wizard_form():
