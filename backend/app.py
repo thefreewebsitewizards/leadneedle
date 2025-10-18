@@ -43,7 +43,11 @@ app = Flask(
     static_folder=os.path.join(os.path.dirname(__file__), '..', 'static')
 )
 
-CORS(app, origins=["*"], supports_credentials=True)
+CORS(app, 
+     origins=["https://thefreewebsitewizards.com", "https://leadneedle.onrender.com", "http://localhost:*", "http://127.0.0.1:*"],
+     methods=["GET", "POST", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=True)
 
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
