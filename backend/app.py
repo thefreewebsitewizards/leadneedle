@@ -43,7 +43,7 @@ app = Flask(
     static_folder=os.path.join(os.path.dirname(__file__), '..', 'static')
 )
 
-CORS(app, origins=["https://thefreewebsitewizards.com"])
+CORS(app, origins=["*"], supports_credentials=True)
 
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
@@ -262,9 +262,25 @@ def handle_form_submission(sheet_name, recipient_email):
         print(f"📋 Full traceback: {traceback.format_exc()}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
-@app.route('/submit-wizard', methods=['POST'])
+@app.route('/submit-wizard', methods=['POST', 'OPTIONS'])
 def submit_wizard_form():
-    return handle_form_submission("Website Submissions", "dylan@thefreewebsitewizards.com")
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+    
+    try:
+        print("🚀 Submit wizard endpoint called")
+        result = handle_form_submission("Website Submissions", "dylan@thefreewebsitewizards.com")
+        return jsonify(result)
+    except Exception as e:
+        print(f"❌ Error in submit_wizard: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/submit', methods=['POST'])
 def submit_contact_form():
