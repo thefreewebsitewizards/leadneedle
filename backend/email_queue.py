@@ -14,9 +14,21 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with more explicit settings for production
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True  # Override any existing logging configuration
+)
 logger = logging.getLogger(__name__)
+
+# Also create a console handler to ensure logs appear
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+logger.setLevel(logging.INFO)
 
 class EmailQueue:
     def __init__(self):
@@ -115,8 +127,15 @@ class EmailQueue:
                 logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
                 
-                # Enable debug output for SMTP
-                server.set_debuglevel(1)
+                # Enable debug output for SMTP - but capture it in our logs
+                # Note: SMTP debug goes to stderr, so we need to capture it
+                logger.info(f"[{email_data['type']}] 🔧 Enabling SMTP debug output...")
+                server.set_debuglevel(0)  # Disable built-in debug to avoid stderr spam
+                
+                # Manual SMTP command logging
+                logger.info(f"[{email_data['type']}] 🔐 Sending EHLO command...")
+                ehlo_response = server.ehlo()
+                logger.info(f"[{email_data['type']}] 📋 EHLO response: {ehlo_response}")
                 
                 logger.info(f"[{email_data['type']}] 🔐 Authenticating with Gmail...")
                 server.login(email_data['sender_email'], email_data['sender_password'])
