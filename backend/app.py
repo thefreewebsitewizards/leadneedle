@@ -177,7 +177,8 @@ Submitted at: {form_data.get('timestamp', 'N/A')}
 
         msg.attach(MIMEText(body, 'plain'))
 
-        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+        # Create SMTP connection with explicit local_hostname to avoid network binding issues
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10, local_hostname='localhost')
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient, msg.as_string())
@@ -231,7 +232,8 @@ https://thefreewebsitewizards.com
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
-        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+        # Create SMTP connection with explicit local_hostname to avoid network binding issues
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10, local_hostname='localhost')
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient_email, msg.as_string())
