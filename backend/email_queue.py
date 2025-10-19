@@ -195,11 +195,28 @@ class EmailQueue:
                 send_result = server.send_message(msg)
                 logger.info(f"[{email_data['type']}] 📬 SMTP send_message result: {send_result}")
                 
+                # Additional verification - try to get server response
+                try:
+                    # Get the last server response
+                    last_response = server.noop()  # No-op command to get server status
+                    logger.info(f"[{email_data['type']}] 🔍 Server status after send: {last_response}")
+                except Exception as noop_error:
+                    logger.warning(f"[{email_data['type']}] ⚠️ Could not get server status: {noop_error}")
+                
                 # Check if there were any refused recipients
                 if send_result:
                     logger.warning(f"[{email_data['type']}] ⚠️ Some recipients were refused: {send_result}")
+                    return False  # If recipients were refused, consider it a failure
                 else:
-                    logger.info(f"[{email_data['type']}] ✅ All recipients accepted")
+                    logger.info(f"[{email_data['type']}] ✅ All recipients accepted by SMTP server")
+                
+                # Log detailed message info for debugging
+                logger.info(f"[{email_data['type']}] 📋 Email details - From: {email_data['sender_email']}, To: {email_data['to']}, Subject: {email_data['subject'][:50]}...")
+                
+                # Verify sender email format
+                if '@' not in email_data['sender_email'] or '.' not in email_data['sender_email']:
+                    logger.error(f"[{email_data['type']}] ❌ Invalid sender email format: {email_data['sender_email']}")
+                    return False
                 
                 server.quit()
                 logger.info(f"[{email_data['type']}] 🔌 SMTP connection closed")
