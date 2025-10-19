@@ -83,12 +83,20 @@ class EmailQueue:
         logger.info(f"📥 Queue size after put: {self.email_queue.qsize()}")
         logger.info(f"📧 Queued {email_type} email to {to_email} (Queue size: {self.email_queue.qsize()})")
         
-        # Start worker if not running
-        if not self.running:
-            logger.info("🚀 Starting worker thread from queue_email")
+        # Check if worker thread is actually alive
+        thread_alive = self.worker_thread.is_alive() if self.worker_thread else False
+        logger.info(f"🔄 Worker status - running: {self.running}, Thread alive: {thread_alive}")
+        
+        # Start worker if not running OR if thread is dead
+        if not self.running or not thread_alive:
+            if not self.running:
+                logger.info("🚀 Starting worker thread - not running")
+            else:
+                logger.warning("💀 Worker thread is dead but running=True, restarting...")
+                self.running = False  # Reset the flag
             self.start_worker()
         else:
-            logger.info(f"🔄 Worker already running: {self.running}, Thread alive: {self.worker_thread.is_alive() if self.worker_thread else 'No thread'}")
+            logger.info(f"✅ Worker thread is healthy and running")
     
     def _email_worker(self):
         """Background worker that processes emails from the queue"""
