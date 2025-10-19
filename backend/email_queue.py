@@ -22,14 +22,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Also create a console handler to ensure logs appear
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-logger.setLevel(logging.INFO)
-
 class EmailQueue:
     def __init__(self):
         self.email_queue = queue.Queue()
@@ -283,8 +275,18 @@ class EmailQueue:
             logger.warning(f"⚠️ Timeout after {timeout}s, {self.email_queue.qsize()} emails still queued")
             return False
 
-# Global email queue instance
-email_queue = EmailQueue()
+# Global email queue instance (singleton pattern)
+_email_queue_instance = None
+
+def get_email_queue():
+    """Get the singleton email queue instance"""
+    global _email_queue_instance
+    if _email_queue_instance is None:
+        _email_queue_instance = EmailQueue()
+    return _email_queue_instance
+
+# For backward compatibility
+email_queue = get_email_queue()
 
 def queue_notification_email(form_data):
     """Queue a notification email for the admin"""
