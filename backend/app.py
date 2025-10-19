@@ -22,7 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from website import website_bp
 
 # Import background email queue system
-from email_queue import queue_notification_email, queue_confirmation_email, email_queue 
+from backend.email_queue import queue_notification_email, queue_confirmation_email, email_queue 
 
 # Assuming these are in backend subfolder relative to app.py
 # If they are in the same folder as app.py, adjust the import path
