@@ -301,26 +301,24 @@ def handle_form_submission(sheet_name, recipient_email):
             except Exception as append_error:
                 print(f"❌ Failed to append to Google Sheet: {append_error}")
 
-        # Send notification and confirmation emails (temporarily disabled to prevent worker timeouts)
-        print("📧 Email sending temporarily disabled to prevent worker timeouts")
-        # TODO: Implement async email sending or use a task queue
-        # print("📧 Sending notification email...")
-        # try:
-        #     if send_notification_email(form_data, "dylan@thefreewebsitewizards.com"):
-        #         print("✅ Notification email sent successfully")
-        #     else:
-        #         print("❌ Failed to send notification email")
-        # except Exception as email_error:
-        #     print(f"❌ Notification email error: {email_error}")
+        # Send notification and confirmation emails (with 10-second timeout)
+        print("📧 Sending notification email...")
+        try:
+            if send_notification_email(form_data, "dylan@thefreewebsitewizards.com"):
+                print("✅ Notification email sent successfully")
+            else:
+                print("❌ Failed to send notification email")
+        except Exception as email_error:
+            print(f"❌ Notification email error: {email_error}")
         
-        # print("📧 Sending confirmation email...")
-        # try:
-        #     if send_confirmation_email(form_data):
-        #         print("✅ Confirmation email sent successfully")
-        #     else:
-        #         print("❌ Failed to send confirmation email")
-        # except Exception as email_error:
-        #     print(f"❌ Confirmation email error: {email_error}")
+        print("📧 Sending confirmation email...")
+        try:
+            if send_confirmation_email(form_data):
+                print("✅ Confirmation email sent successfully")
+            else:
+                print("❌ Failed to send confirmation email")
+        except Exception as email_error:
+            print(f"❌ Confirmation email error: {email_error}")
         
         print("✅ Form submission completed successfully")
         return {"status": "success", "message": "Form submitted successfully!"}
