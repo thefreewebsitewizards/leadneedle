@@ -154,8 +154,12 @@ class EmailQueue:
                 
                 # Use SSL method (port 465) - this works outside Flask request context
                 logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
-                logger.info(f"[{email_data['type']}] ✅ SMTP connection established")
+                try:
+                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+                    logger.info(f"[{email_data['type']}] ✅ SMTP SSL connection established")
+                except Exception as conn_error:
+                    logger.error(f"[{email_data['type']}] ❌ SMTP connection failed: {conn_error}")
+                    raise
                 
                 # Enable debug output for SMTP - but capture it in our logs
                 # Note: SMTP debug goes to stderr, so we need to capture it
@@ -164,12 +168,20 @@ class EmailQueue:
                 
                 # Manual SMTP command logging
                 logger.info(f"[{email_data['type']}] 🔐 Sending EHLO command...")
-                ehlo_response = server.ehlo()
-                logger.info(f"[{email_data['type']}] 📋 EHLO response: {ehlo_response}")
+                try:
+                    ehlo_response = server.ehlo()
+                    logger.info(f"[{email_data['type']}] 📋 EHLO response: {ehlo_response}")
+                except Exception as ehlo_error:
+                    logger.error(f"[{email_data['type']}] ❌ EHLO failed: {ehlo_error}")
+                    raise
                 
                 logger.info(f"[{email_data['type']}] 🔐 Authenticating with Gmail...")
-                server.login(email_data['sender_email'], email_data['sender_password'])
-                logger.info(f"[{email_data['type']}] ✅ Authentication successful")
+                try:
+                    server.login(email_data['sender_email'], email_data['sender_password'])
+                    logger.info(f"[{email_data['type']}] ✅ Authentication successful")
+                except Exception as auth_error:
+                    logger.error(f"[{email_data['type']}] ❌ Authentication failed: {auth_error}")
+                    raise
                 
                 # Create message
                 logger.info(f"[{email_data['type']}] 📝 Creating email message...")
