@@ -177,7 +177,7 @@ Submitted at: {form_data.get('timestamp', 'N/A')}
 
         msg.attach(MIMEText(body, 'plain'))
 
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient, msg.as_string())
@@ -231,7 +231,7 @@ https://thefreewebsitewizards.com
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient_email, msg.as_string())
@@ -301,24 +301,26 @@ def handle_form_submission(sheet_name, recipient_email):
             except Exception as append_error:
                 print(f"❌ Failed to append to Google Sheet: {append_error}")
 
-        # Send notification and confirmation emails
-        print("📧 Sending notification email...")
-        try:
-            if send_notification_email(form_data, "dylan@thefreewebsitewizards.com"):
-                print("✅ Notification email sent successfully")
-            else:
-                print("❌ Failed to send notification email")
-        except Exception as email_error:
-            print(f"❌ Notification email error: {email_error}")
+        # Send notification and confirmation emails (temporarily disabled to prevent worker timeouts)
+        print("📧 Email sending temporarily disabled to prevent worker timeouts")
+        # TODO: Implement async email sending or use a task queue
+        # print("📧 Sending notification email...")
+        # try:
+        #     if send_notification_email(form_data, "dylan@thefreewebsitewizards.com"):
+        #         print("✅ Notification email sent successfully")
+        #     else:
+        #         print("❌ Failed to send notification email")
+        # except Exception as email_error:
+        #     print(f"❌ Notification email error: {email_error}")
         
-        print("📧 Sending confirmation email...")
-        try:
-            if send_confirmation_email(form_data):
-                print("✅ Confirmation email sent successfully")
-            else:
-                print("❌ Failed to send confirmation email")
-        except Exception as email_error:
-            print(f"❌ Confirmation email error: {email_error}")
+        # print("📧 Sending confirmation email...")
+        # try:
+        #     if send_confirmation_email(form_data):
+        #         print("✅ Confirmation email sent successfully")
+        #     else:
+        #         print("❌ Failed to send confirmation email")
+        # except Exception as email_error:
+        #     print(f"❌ Confirmation email error: {email_error}")
         
         print("✅ Form submission completed successfully")
         return {"status": "success", "message": "Form submitted successfully!"}
