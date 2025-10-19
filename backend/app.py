@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 from flask_cors import CORS
@@ -177,16 +178,26 @@ Submitted at: {form_data.get('timestamp', 'N/A')}
 
         msg.attach(MIMEText(body, 'plain'))
 
-        # Create SMTP connection with explicit local_hostname to avoid network binding issues
-        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10, local_hostname='localhost')
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, recipient, msg.as_string())
-        server.quit()
+        # Retry logic with shorter timeout to prevent long delays
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                print(f"[Notification Email] Attempt {attempt + 1}/{max_retries}")
+                server = smtplib.SMTP(smtp_server, smtp_port, timeout=3)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, recipient, msg.as_string())
+                server.quit()
+                print("✅ Notification email sent successfully")
+                return True
+            except Exception as retry_error:
+                print(f"[Notification Email] Attempt {attempt + 1} failed: {retry_error}")
+                if attempt == max_retries - 1:
+                    raise retry_error
+                time.sleep(1)  # Brief pause between retries
 
-        return True
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"❌ Failed to send notification email after all retries: {e}")
         return False
 
 def send_confirmation_email(form_data):
@@ -232,16 +243,26 @@ https://thefreewebsitewizards.com
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
-        # Create SMTP connection with explicit local_hostname to avoid network binding issues
-        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10, local_hostname='localhost')
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, recipient_email, msg.as_string())
-        server.quit()
+        # Retry logic with shorter timeout to prevent long delays
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                print(f"[Confirmation Email] Attempt {attempt + 1}/{max_retries}")
+                server = smtplib.SMTP(smtp_server, smtp_port, timeout=3)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, recipient_email, msg.as_string())
+                server.quit()
+                print("✅ Confirmation email sent successfully")
+                return True
+            except Exception as retry_error:
+                print(f"[Confirmation Email] Attempt {attempt + 1} failed: {retry_error}")
+                if attempt == max_retries - 1:
+                    raise retry_error
+                time.sleep(1)  # Brief pause between retries
 
-        return True
     except Exception as e:
-        print(f"Error sending confirmation email: {e}")
+        print(f"❌ Failed to send confirmation email after all retries: {e}")
         return False
 
 def handle_form_submission(sheet_name, recipient_email):
