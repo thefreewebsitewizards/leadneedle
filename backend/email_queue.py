@@ -73,23 +73,36 @@ class EmailQueue:
             'max_attempts': 3
         }
         
+        logger.info(f"📥 Adding email to queue: {email_type} to {to_email}")
+        logger.info(f"📥 Queue instance ID: {id(self.email_queue)}")
+        logger.info(f"📥 Queue size before put: {self.email_queue.qsize()}")
+        
         self.email_queue.put(email_data)
         self.stats['queued'] += 1
         
+        logger.info(f"📥 Queue size after put: {self.email_queue.qsize()}")
         logger.info(f"📧 Queued {email_type} email to {to_email} (Queue size: {self.email_queue.qsize()})")
         
         # Start worker if not running
         if not self.running:
+            logger.info("🚀 Starting worker thread from queue_email")
             self.start_worker()
+        else:
+            logger.info(f"🔄 Worker already running: {self.running}, Thread alive: {self.worker_thread.is_alive() if self.worker_thread else 'No thread'}")
     
     def _email_worker(self):
         """Background worker that processes emails from the queue"""
         logger.info("🔄 Email worker started processing queue")
+        logger.info(f"🔄 Worker thread ID: {threading.current_thread().ident}")
+        logger.info(f"🔄 Queue instance ID in worker: {id(self.email_queue)}")
         
         while self.running:
             try:
                 # Get email from queue with timeout
                 logger.info("🔍 Worker checking for emails in queue...")
+                logger.info(f"🔍 Current queue size: {self.email_queue.qsize()}")
+                logger.info(f"🔍 Worker running status: {self.running}")
+                
                 email_data = self.email_queue.get(timeout=1)
                 logger.info(f"📨 Worker got email from queue: {email_data['type']} to {email_data['to']}")
                 
