@@ -183,8 +183,8 @@ Submitted at: {form_data.get('timestamp', 'N/A')}
         for attempt in range(max_retries):
             try:
                 print(f"[Notification Email] Attempt {attempt + 1}/{max_retries}")
-                server = smtplib.SMTP(smtp_server, smtp_port, timeout=3)
-                server.starttls()
+                # Use SSL connection (port 465) instead of STARTTLS to avoid network binding issues
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=3)
                 server.login(sender_email, sender_password)
                 server.sendmail(sender_email, recipient, msg.as_string())
                 server.quit()
@@ -248,8 +248,8 @@ https://thefreewebsitewizards.com
         for attempt in range(max_retries):
             try:
                 print(f"[Confirmation Email] Attempt {attempt + 1}/{max_retries}")
-                server = smtplib.SMTP(smtp_server, smtp_port, timeout=3)
-                server.starttls()
+                # Use SSL connection (port 465) instead of STARTTLS to avoid network binding issues
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=3)
                 server.login(sender_email, sender_password)
                 server.sendmail(sender_email, recipient_email, msg.as_string())
                 server.quit()
