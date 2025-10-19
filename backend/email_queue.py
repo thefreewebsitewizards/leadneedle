@@ -105,36 +105,91 @@ class EmailQueue:
         max_attempts = email_data['max_attempts']
         
         for attempt in range(1, max_attempts + 1):
+            server = None
             try:
-                logger.info(f"[{email_data['type']}] Attempt {attempt}/{max_attempts} to {email_data['to']}")
+                logger.info(f"[{email_data['type']}] 🚀 Attempt {attempt}/{max_attempts} to {email_data['to']}")
+                logger.info(f"[{email_data['type']}] 📧 From: {email_data['sender_email']}")
+                logger.info(f"[{email_data['type']}] 📧 Subject: {email_data['subject']}")
                 
                 # Use SSL method (port 465) - this works outside Flask request context
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+                logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
+                
+                # Enable debug output for SMTP
+                server.set_debuglevel(1)
+                
+                logger.info(f"[{email_data['type']}] 🔐 Authenticating with Gmail...")
                 server.login(email_data['sender_email'], email_data['sender_password'])
+                logger.info(f"[{email_data['type']}] ✅ Authentication successful")
                 
                 # Create message
                 msg = MIMEMultipart()
                 msg['From'] = email_data['sender_email']
                 msg['To'] = email_data['to']
                 msg['Subject'] = email_data['subject']
+                msg['Date'] = datetime.now().strftime('%a, %d %b %Y %H:%M:%S %z')
+                msg['Message-ID'] = f"<{datetime.now().timestamp()}@leadneedle.com>"
                 
                 # Add body
                 msg.attach(MIMEText(email_data['body'], 'html'))
                 
-                # Send email
-                server.send_message(msg)
-                server.quit()
+                logger.info(f"[{email_data['type']}] 📤 Sending email...")
+                logger.info(f"[{email_data['type']}] 📧 Message size: {len(str(msg))} bytes")
                 
-                logger.info(f"[{email_data['type']}] ✅ Attempt {attempt} succeeded")
+                # Send email and capture response
+                send_result = server.send_message(msg)
+                logger.info(f"[{email_data['type']}] 📬 SMTP send_message result: {send_result}")
+                
+                # Check if there were any refused recipients
+                if send_result:
+                    logger.warning(f"[{email_data['type']}] ⚠️ Some recipients were refused: {send_result}")
+                else:
+                    logger.info(f"[{email_data['type']}] ✅ All recipients accepted")
+                
+                server.quit()
+                logger.info(f"[{email_data['type']}] 🔌 SMTP connection closed")
+                
+                logger.info(f"[{email_data['type']}] ✅ Attempt {attempt} completed successfully")
                 return True
                 
+            except smtplib.SMTPAuthenticationError as e:
+                logger.error(f"[{email_data['type']}] 🔐 Authentication failed: {e}")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                return False  # Don't retry auth failures
+                
+            except smtplib.SMTPRecipientsRefused as e:
+                logger.error(f"[{email_data['type']}] 📧 Recipients refused: {e}")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                return False  # Don't retry recipient failures
+                
+            except smtplib.SMTPException as e:
+                logger.error(f"[{email_data['type']}] 📧 SMTP error: {e}")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                
             except Exception as e:
-                logger.error(f"[{email_data['type']}] Attempt {attempt} failed: {e}")
+                logger.error(f"[{email_data['type']}] ❌ Unexpected error: {e}")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
                 
                 if attempt < max_attempts:
                     # Wait before retry (exponential backoff)
                     wait_time = 2 ** attempt
-                    logger.info(f"[{email_data['type']}] Waiting {wait_time}s before retry...")
+                    logger.info(f"[{email_data['type']}] ⏳ Waiting {wait_time}s before retry...")
                     time.sleep(wait_time)
                 else:
                     logger.error(f"[{email_data['type']}] ❌ Failed after all {max_attempts} attempts")
