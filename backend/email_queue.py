@@ -89,7 +89,9 @@ class EmailQueue:
         while self.running:
             try:
                 # Get email from queue with timeout
+                logger.info("🔍 Worker checking for emails in queue...")
                 email_data = self.email_queue.get(timeout=1)
+                logger.info(f"📨 Worker got email from queue: {email_data['type']} to {email_data['to']}")
                 
                 success = self._send_email(email_data)
                 
@@ -102,18 +104,24 @@ class EmailQueue:
                 
                 # Mark task as done
                 self.email_queue.task_done()
+                logger.info(f"✅ Task marked as done for {email_data['type']} email")
                 
             except queue.Empty:
                 # No emails in queue, continue loop
+                logger.debug("📭 No emails in queue, continuing...")
                 continue
             except Exception as e:
                 logger.error(f"❌ Email worker error: {e}")
+                logger.error(f"❌ Exception type: {type(e).__name__}")
+                import traceback
+                logger.error(f"❌ Full traceback: {traceback.format_exc()}")
                 continue
         
         logger.info("🔄 Email worker stopped")
     
     def _send_email(self, email_data):
         """Send a single email with retry logic"""
+        logger.info(f"[{email_data['type']}] 🎯 _send_email method called")
         max_attempts = email_data['max_attempts']
         
         for attempt in range(1, max_attempts + 1):
@@ -126,6 +134,7 @@ class EmailQueue:
                 # Use SSL method (port 465) - this works outside Flask request context
                 logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
+                logger.info(f"[{email_data['type']}] ✅ SMTP connection established")
                 
                 # Enable debug output for SMTP - but capture it in our logs
                 # Note: SMTP debug goes to stderr, so we need to capture it
@@ -142,6 +151,7 @@ class EmailQueue:
                 logger.info(f"[{email_data['type']}] ✅ Authentication successful")
                 
                 # Create message
+                logger.info(f"[{email_data['type']}] 📝 Creating email message...")
                 msg = MIMEMultipart()
                 msg['From'] = email_data['sender_email']
                 msg['To'] = email_data['to']
@@ -151,6 +161,7 @@ class EmailQueue:
                 
                 # Add body
                 msg.attach(MIMEText(email_data['body'], 'html'))
+                logger.info(f"[{email_data['type']}] ✅ Email message created")
                 
                 logger.info(f"[{email_data['type']}] 📤 Sending email...")
                 logger.info(f"[{email_data['type']}] 📧 Message size: {len(str(msg))} bytes")
