@@ -58,41 +58,69 @@ app.register_blueprint(website_bp)
 
 def get_google_sheet(sheet_name="Submissions"):
     """
-    Try to connect to Google Sheets using service account credentials first,
-    then fall back to user credentials if available.
+    Try to connect to Google Sheets using OAuth credentials from environment variable first,
+    then fall back to local token.pickle file.
     """
     import pickle
+    import json
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google.oauth2 import service_account
     
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     
-    # First, try service account authentication (for production)
+    # First, try OAuth credentials from environment variable (for production)
+    oauth_creds_json = os.environ.get('GOOGLE_OAUTH_CREDENTIALS')
+    if oauth_creds_json:
+        try:
+            print("🔑 Using OAuth credentials from environment variable")
+            oauth_info = json.loads(oauth_creds_json)
+            creds = Credentials(
+                token=oauth_info.get('token'),
+                refresh_token=oauth_info.get('refresh_token'),
+                token_uri=oauth_info.get('token_uri'),
+                client_id=oauth_info.get('client_id'),
+                client_secret=oauth_info.get('client_secret'),
+                scopes=SCOPES
+            )
+            
+            # Refresh token if needed
+            if not creds.valid and creds.refresh_token:
+                creds.refresh(Request())
+                print("🔄 OAuth token refreshed successfully")
+            
+            client = gspread.authorize(creds)
+            return client.open_by_key("1batVITcT526zxkc8Qdf0_AKbORnrLRB7-wHdDKhcm9M").worksheet(sheet_name)
+        except Exception as e:
+            print(f"❌ OAuth credentials from environment failed: {e}")
+    
+    # Try service account authentication (legacy support)
     service_account_path = os.environ.get('GOOGLE_SERVICE_ACCOUNT_PATH')
     service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
     
     if service_account_json:
         try:
-            import json
+            print("🔑 Trying service account from environment variable")
             service_account_info = json.loads(service_account_json)
             creds = service_account.Credentials.from_service_account_info(
                 service_account_info, scopes=SCOPES)
             client = gspread.authorize(creds)
             return client.open_by_key("1batVITcT526zxkc8Qdf0_AKbORnrLRB7-wHdDKhcm9M").worksheet(sheet_name)
         except Exception as e:
-            print(f"Service account auth failed: {e}")
+            print(f"❌ Service account auth failed: {e}")
     
     if service_account_path and os.path.exists(service_account_path):
         try:
+            print("🔑 Trying service account from file path")
             creds = service_account.Credentials.from_service_account_file(
                 service_account_path, scopes=SCOPES)
             client = gspread.authorize(creds)
             return client.open_by_key("1batVITcT526zxkc8Qdf0_AKbORnrLRB7-wHdDKhcm9M").worksheet(sheet_name)
         except Exception as e:
-            print(f"Service account file auth failed: {e}")
+            print(f"❌ Service account file auth failed: {e}")
     
-    # Fall back to user credentials (for local development)
+    # Fall back to local token.pickle (for local development)
+    print("🔑 Trying local token.pickle file")
     creds = None
     token_path = os.path.join(os.path.dirname(__file__), 'token.pickle')
     if os.path.exists(token_path):
@@ -104,10 +132,11 @@ def get_google_sheet(sheet_name="Submissions"):
             creds.refresh(Request())
             with open(token_path, 'wb') as token:
                 pickle.dump(creds, token)
+            print("🔄 Local token refreshed successfully")
         else:
             # For production deployment, we'll skip Google Sheets if no auth is available
             raise Exception("No valid Google Sheets authentication found. "
-                          "Set GOOGLE_SERVICE_ACCOUNT_JSON environment variable "
+                          "Set GOOGLE_OAUTH_CREDENTIALS environment variable "
                           "or run manual_auth.py locally to generate token.pickle.")
 
     client = gspread.authorize(creds)
