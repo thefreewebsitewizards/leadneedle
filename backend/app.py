@@ -19,7 +19,10 @@ load_dotenv()
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from website import website_bp 
+from website import website_bp
+
+# Import background email queue system
+from email_queue import queue_notification_email, queue_confirmation_email, email_queue 
 
 # Assuming these are in backend subfolder relative to app.py
 # If they are in the same folder as app.py, adjust the import path
@@ -144,125 +147,30 @@ def get_google_sheet(sheet_name="Submissions"):
     return client.open_by_key("1batVITcT526zxkc8Qdf0_AKbORnrLRB7-wHdDKhcm9M").worksheet(sheet_name)
 
 def send_notification_email(form_data, recipient="dylan@leadneedle.com"):
+    """Queue notification email using background processing to avoid Flask request context issues"""
     try:
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
-        sender_email = os.environ.get('SENDER_EMAIL', 'your-email@gmail.com')
-        sender_password = os.environ.get('SENDER_PASSWORD', 'your-app-password')
-
-        if not sender_email or not sender_password:
-            raise ValueError("SENDER_EMAIL or SENDER_PASSWORD environment variable not set.")
-
-        print("[Notification Email] Using:", sender_email)
-        print("[Notification Email] Password length:", len(sender_password) if sender_password else 0)
-
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = recipient
-        msg['Subject'] = "New Contact Form Submission"
-
-        body = f"""
-New contact form submission received:
-
-Name: {form_data.get('firstName', 'N/A')} {form_data.get('lastName', 'N/A')}
-Email: {form_data.get('email', 'N/A')}
-phoneNumber: {form_data.get('phoneNumber', 'N/A')}
-Service: {form_data.get('service', 'N/A')}
-Message: {form_data.get('message', 'N/A')}
-Website Name: {form_data.get('websiteName', 'N/A')}
-Has Website: {form_data.get('hasWebsite', 'N/A')}
-Website Description: {form_data.get('websiteDescription', 'N/A')}
-
-Submitted at: {form_data.get('timestamp', 'N/A')}
-        """
-
-        msg.attach(MIMEText(body, 'plain'))
-
-        # Retry logic with shorter timeout to prevent long delays
-        max_retries = 2
-        for attempt in range(max_retries):
-            try:
-                print(f"[Notification Email] Attempt {attempt + 1}/{max_retries}")
-                # Use SSL connection (port 465) instead of STARTTLS to avoid network binding issues
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=3)
-                server.login(sender_email, sender_password)
-                server.sendmail(sender_email, recipient, msg.as_string())
-                server.quit()
-                print("✅ Notification email sent successfully")
-                return True
-            except Exception as retry_error:
-                print(f"[Notification Email] Attempt {attempt + 1} failed: {retry_error}")
-                if attempt == max_retries - 1:
-                    raise retry_error
-                time.sleep(1)  # Brief pause between retries
-
+        print("📧 Queuing notification email...")
+        queue_notification_email(form_data)
+        print("✅ Notification email queued successfully")
+        return True
     except Exception as e:
-        print(f"❌ Failed to send notification email after all retries: {e}")
+        print(f"❌ Failed to queue notification email: {e}")
         return False
 
 def send_confirmation_email(form_data):
+    """Queue confirmation email using background processing to avoid Flask request context issues"""
     try:
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
-        sender_email = os.environ.get('SENDER_EMAIL', 'your-email@gmail.com')
-        sender_password = os.environ.get('SENDER_PASSWORD', 'your-app-password')
         recipient_email = form_data.get('email')
-
-        if not sender_email or not sender_password:
-            raise ValueError("SENDER_EMAIL or SENDER_PASSWORD environment variable not set.")
         if not recipient_email:
             print("Warning: No recipient email provided for confirmation email.")
             return False
-
-        print("[Confirmation Email] Using:", sender_email)
-        print("[Confirmation Email] Password length:", len(sender_password) if sender_password else 0)
-        print(f"[Confirmation Email] Sending to: {recipient_email}")
-
-
-        subject = "Your Website Application Has Been Received ✨"
-        body = f"""
-Hi {form_data.get('firstName', 'there')},
-
-Thanks for applying to get your free website built by The Free Website Wizards!
-
-We’ve received your info and our team will begin reviewing it shortly. If we have any questions, we’ll reach out directly. Otherwise, you’ll hear from us soon with the next steps.
-
-In the meantime, feel free to check out examples of our work or share your business details with friends who might also benefit.
-
-Your submitted website name: {form_data.get('websiteName', 'N/A')}
-Your description: {form_data.get('websiteDescription', 'N/A')}
-
-✨ Talk soon,
-The Free Website Wizards
-https://thefreewebsitewizards.com
-        """
-
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        # Retry logic with shorter timeout to prevent long delays
-        max_retries = 2
-        for attempt in range(max_retries):
-            try:
-                print(f"[Confirmation Email] Attempt {attempt + 1}/{max_retries}")
-                # Use SSL connection (port 465) instead of STARTTLS to avoid network binding issues
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=3)
-                server.login(sender_email, sender_password)
-                server.sendmail(sender_email, recipient_email, msg.as_string())
-                server.quit()
-                print("✅ Confirmation email sent successfully")
-                return True
-            except Exception as retry_error:
-                print(f"[Confirmation Email] Attempt {attempt + 1} failed: {retry_error}")
-                if attempt == max_retries - 1:
-                    raise retry_error
-                time.sleep(1)  # Brief pause between retries
-
+        
+        print("📧 Queuing confirmation email...")
+        queue_confirmation_email(recipient_email, form_data)
+        print("✅ Confirmation email queued successfully")
+        return True
     except Exception as e:
-        print(f"❌ Failed to send confirmation email after all retries: {e}")
+        print(f"❌ Failed to queue confirmation email: {e}")
         return False
 
 def handle_form_submission(sheet_name, recipient_email):
