@@ -40,9 +40,10 @@ class EmailQueue:
             return
         
         self.running = True
-        self.worker_thread = threading.Thread(target=self._email_worker, daemon=True)
+        # Use regular thread instead of daemon to avoid network connectivity issues
+        self.worker_thread = threading.Thread(target=self._email_worker, daemon=False)
         self.worker_thread.start()
-        logger.info("✅ Email worker thread started")
+        logger.info("✅ Email worker thread started (non-daemon)")
     
     def stop_worker(self):
         """Stop the background email worker thread"""

@@ -343,6 +343,22 @@ def receive_sms():
     send_sms(phone, "✅ Thanks! We've saved your info and booked your appointment.")
     return jsonify({"status": "success", "responses": responses})
 
+# Add shutdown handler for proper cleanup of email worker thread
+import atexit
+from backend.email_queue import _email_queue_instance
+
+def cleanup_email_worker():
+    """Cleanup function to stop email worker thread on app shutdown"""
+    try:
+        if _email_queue_instance:
+            _email_queue_instance.stop_worker()
+            print("🧹 Email worker thread stopped during cleanup")
+    except Exception as e:
+        print(f"⚠️ Error during email worker cleanup: {e}")
+
+# Register cleanup function
+atexit.register(cleanup_email_worker)
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
