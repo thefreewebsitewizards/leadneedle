@@ -9,6 +9,7 @@ import time
 import threading
 import queue
 import smtplib
+import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -134,32 +135,54 @@ class EmailQueue:
         logger.info("🔄 Email worker stopped")
     
     def _send_email(self, email_data):
-        """Send a single email with retry logic"""
+        """Send a single email with robust retry logic"""
         logger.info(f"[{email_data['type']}] 🎯 _send_email method called")
-        max_attempts = email_data['max_attempts']
+        
+        max_attempts = email_data.get('max_attempts', 3)
+        server = None
         
         for attempt in range(1, max_attempts + 1):
-            server = None
+            logger.info(f"[{email_data['type']}] 🚀 Attempt {attempt}/{max_attempts} to {email_data['to']}")
+            logger.info(f"[{email_data['type']}] 📧 From: {email_data['sender_email']}")
+            logger.info(f"[{email_data['type']}] 📧 Subject: {email_data['subject']}")
+            
             try:
-                logger.info(f"[{email_data['type']}] 🚀 Attempt {attempt}/{max_attempts} to {email_data['to']}")
-                logger.info(f"[{email_data['type']}] 📧 From: {email_data['sender_email']}")
-                logger.info(f"[{email_data['type']}] 📧 Subject: {email_data['subject']}")
-                
-                # Use SSL method (port 465) - this works outside Flask request context
-                logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
+                # Pre-connection network test with longer timeout
+                logger.info(f"[{email_data['type']}] 🔍 Testing network connectivity...")
+                import socket
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(15)  # Increased timeout
                 try:
-                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
-                    logger.info(f"[{email_data['type']}] ✅ SMTP SSL connection established")
-                except Exception as conn_error:
-                    logger.error(f"[{email_data['type']}] ❌ SMTP connection failed: {conn_error}")
-                    raise
+                    result = sock.connect_ex(('smtp.gmail.com', 465))
+                    if result != 0:
+                        raise ConnectionError(f"Network connectivity test failed: {result}")
+                    logger.info(f"[{email_data['type']}] ✅ Network connectivity verified")
+                finally:
+                    sock.close()
+                
+                logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
+                
+                # Create SMTP connection with increased timeout and retry logic
+                connection_attempts = 3
+                for conn_attempt in range(1, connection_attempts + 1):
+                    try:
+                        server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=20)  # Increased timeout
+                        logger.info(f"[{email_data['type']}] ✅ SMTP SSL connection established (attempt {conn_attempt})")
+                        break
+                    except Exception as conn_error:
+                        logger.error(f"[{email_data['type']}] ❌ SMTP connection attempt {conn_attempt} failed: {conn_error}")
+                        if conn_attempt < connection_attempts:
+                            logger.info(f"[{email_data['type']}] ⏳ Waiting 3s before connection retry...")
+                            time.sleep(3)
+                        else:
+                            raise
                 
                 # Enable debug output for SMTP - but capture it in our logs
                 # Note: SMTP debug goes to stderr, so we need to capture it
                 logger.info(f"[{email_data['type']}] 🔧 Enabling SMTP debug output...")
                 server.set_debuglevel(0)  # Disable built-in debug to avoid stderr spam
                 
-                # Manual SMTP command logging
+                # Manual SMTP command logging with retry
                 logger.info(f"[{email_data['type']}] 🔐 Sending EHLO command...")
                 try:
                     ehlo_response = server.ehlo()
@@ -251,6 +274,18 @@ class EmailQueue:
                     except:
                         pass
                 
+            except (ConnectionError, OSError, socket.error) as e:
+                logger.error(f"[{email_data['type']}] 🌐 Network/Connection error: {e}")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                
+                # Special handling for "Network is unreachable" errors
+                if hasattr(e, 'errno') and e.errno == 101:
+                    logger.error(f"[{email_data['type']}] 💀 Network is unreachable - system-level network issue")
+                
             except Exception as e:
                 logger.error(f"[{email_data['type']}] ❌ Unexpected error: {e}")
                 if server:
@@ -259,14 +294,17 @@ class EmailQueue:
                     except:
                         pass
                 
-                if attempt < max_attempts:
-                    # Wait before retry (exponential backoff)
-                    wait_time = 2 ** attempt
-                    logger.info(f"[{email_data['type']}] ⏳ Waiting {wait_time}s before retry...")
-                    time.sleep(wait_time)
-                else:
-                    logger.error(f"[{email_data['type']}] ❌ Failed after all {max_attempts} attempts")
-                    return False
+            # Retry logic with exponential backoff
+            if attempt < max_attempts:
+                # Increased wait time with jitter to avoid thundering herd
+                base_wait = 2 ** attempt
+                jitter = random.uniform(0.5, 1.5)  # Add randomness
+                wait_time = int(base_wait * jitter)
+                logger.info(f"[{email_data['type']}] ⏳ Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"[{email_data['type']}] ❌ Failed after all {max_attempts} attempts")
+                return False
         
         return False
     
