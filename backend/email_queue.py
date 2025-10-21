@@ -150,15 +150,31 @@ class EmailQueue:
                 # Pre-connection network test with longer timeout
                 logger.info(f"[{email_data['type']}] 🔍 Testing network connectivity...")
                 import socket
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(15)  # Increased timeout
+                network_test_passed = False
                 try:
-                    result = sock.connect_ex(('smtp.gmail.com', 465))
-                    if result != 0:
-                        raise ConnectionError(f"Network connectivity test failed: {result}")
-                    logger.info(f"[{email_data['type']}] ✅ Network connectivity verified")
-                finally:
-                    sock.close()
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(15)  # Increased timeout
+                    try:
+                        result = sock.connect_ex(('smtp.gmail.com', 465))
+                        if result == 0:
+                            logger.info(f"[{email_data['type']}] ✅ Network connectivity verified")
+                            network_test_passed = True
+                        elif result == 11:  # WSAEWOULDBLOCK - Resource temporarily unavailable
+                            logger.info(f"[{email_data['type']}] ⚠️ Network test returned code 11 (non-blocking), proceeding with SMTP connection...")
+                            network_test_passed = True  # Treat as non-fatal, proceed anyway
+                        else:
+                            logger.warning(f"[{email_data['type']}] ⚠️ Network test failed with code {result}, but proceeding with SMTP connection...")
+                            network_test_passed = True  # Still proceed, let SMTP connection be the real test
+                    finally:
+                        sock.close()
+                except Exception as e:
+                    logger.warning(f"[{email_data['type']}] ⚠️ Network test exception: {e}, proceeding with SMTP connection...")
+                    network_test_passed = True  # Proceed anyway, let SMTP be the real test
+                
+                if not network_test_passed:
+                    raise ConnectionError(f"Network connectivity test failed")
+                    
+                # If we get here, either the test passed or we're proceeding despite the test
                 
                 logger.info(f"[{email_data['type']}] 🔗 Connecting to smtp.gmail.com:465...")
                 
