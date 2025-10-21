@@ -197,6 +197,8 @@ def handle_form_submission(sheet_name, recipient_email):
             'lastName': data.get('lastName'), # Added for completeness if frontend sends it
             'email': data.get('email'),
             'phoneNumber': data.get('phoneNumber') or data.get('phone'), # Handle both field names
+            'countryCode': data.get('countryCode'), # Capture country code from frontend
+            'countryName': data.get('countryName'), # Capture country name from frontend
             'websiteName': data.get('websiteName'),
             'websiteDescription': data.get('websiteDescription'),
             'hasWebsite': data.get('hasWebsite'),
@@ -221,6 +223,8 @@ def handle_form_submission(sheet_name, recipient_email):
                     form_data.get('firstName', ''),
                     form_data.get('email', ''),
                     form_data.get('phoneNumber', ''),
+                    form_data.get('countryCode', ''), # Add country code to Google Sheets
+                    form_data.get('countryName', ''), # Add country name to Google Sheets
                     form_data.get('hasWebsite', ''),
                     form_data.get('websiteName', ''),
                     form_data.get('websiteDescription', '')
