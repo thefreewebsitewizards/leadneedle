@@ -99,9 +99,9 @@ class EmailQueue:
         while self.running:
             try:
                 # Get email from queue with timeout
-                logger.info("🔍 Worker checking for emails in queue...")
-                logger.info(f"🔍 Current queue size: {self.email_queue.qsize()}")
-                logger.info(f"🔍 Worker running status: {self.running}")
+                logger.debug("🔍 Worker checking for emails in queue...")
+                logger.debug(f"🔍 Current queue size: {self.email_queue.qsize()}")
+                logger.debug(f"🔍 Worker running status: {self.running}")
                 
                 email_data = self.email_queue.get(timeout=1)
                 logger.info(f"📨 Worker got email from queue: {email_data['type']} to {email_data['to']}")
