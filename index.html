@@ -240,7 +240,7 @@
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <a href="#top" class="flex items-center mr-6 md:mr-12">
-                    <img src="{{ url_for('static', filename='attached_assets/LeadNeedlelogotransparent.png') }}" alt="Lead Needle Logo" class="h-28 md:h-32 w-auto hover:opacity-90 transition-opacity">
+                    <img src="LeadNeedlelogotransparent.png" alt="Lead Needle Logo" class="h-28 md:h-32 w-auto hover:opacity-90 transition-opacity">
                 </a>
 
                 <!-- Desktop Navigation -->
@@ -569,7 +569,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
                 <div class="flex items-center mb-4">
-                    <img src="{{ url_for('static', filename='attached_assets/LeadNeedlelogotransparent.png') }}" alt="Lead Needle Logo" class="h-auto max-h-20 w-auto object-contain block">
+                    <img src="LeadNeedlelogotransparent.png" alt="Lead Needle Logo" class="h-auto max-h-20 w-auto object-contain block">
                 </div>
                 <p class="text-gray-400 text-sm">
                     AI-powered sales agents that book more jobs for your service business.
@@ -583,7 +583,7 @@
                     <li><a href="#how-it-works" class="text-gray-400 hover:text-neon-green transition duration-300">How It Works</a></li>
                     <li><a href="#about" class="text-gray-400 hover:text-neon-green transition duration-300">About</a></li>
                     <li><a href="#contact" class="text-gray-400 hover:text-neon-green transition duration-300">Contact</a></li>
-                    <li><a href="/privacy-policy" class="text-gray-400 hover:text-neon-green transition duration-300">Privacy Policy</a></li>
+                    <li><a href="privacy-policy.html" class="text-gray-400 hover:text-neon-green transition duration-300">Privacy Policy</a></li>
                 </ul>
             </div>
         </div>
@@ -598,8 +598,8 @@
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -620,23 +620,24 @@
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -682,29 +683,33 @@
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -718,28 +723,10 @@
 </script>
 </body>
 </html>
-nu
-<body>
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="fixed top-4 right-4 z-50">
-                {% for category, message in messages %}
-                    <div class="{% if category == 'error' %}bg-red-500{% else %}bg-green-500{% endif %} text-white px-6 py-3 rounded-lg mb-2 shadow-lg">
-                        {{ message }}
-                        <button onclick="this.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">&times;</button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-</body>
-</html>
-
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -760,23 +747,24 @@ nu
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -822,29 +810,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -861,8 +853,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -883,23 +875,24 @@ nu
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -945,29 +938,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -984,8 +981,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -1006,23 +1003,24 @@ nu
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -1068,29 +1066,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -1107,8 +1109,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -1129,23 +1131,24 @@ nu
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -1191,29 +1194,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -1230,8 +1237,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -1252,23 +1259,24 @@ nu
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -1314,29 +1322,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -1353,8 +1365,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -1375,23 +1387,24 @@ nu
         lastScroll = currentScroll;
     });
 
-    // Smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    // Smooth scroll with header offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const headerHeight = header ? header.offsetHeight : 0;
+                const y = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         });
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -1437,29 +1450,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -1476,8 +1493,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
@@ -1513,8 +1530,8 @@ nu
     });
 
     // Mobile menu toggle
-    const mobileMenuButton = document.querySelector('button.md\\:hidden');
-    const nav = document.querySelector('nav');
+    var mobileMenuButton = document.querySelector('button.md\\:hidden');
+    var nav = document.querySelector('nav');
 
     if (mobileMenuButton && nav) {
         mobileMenuButton.addEventListener('click', function() {
@@ -1560,29 +1577,33 @@ nu
     }
 
     // Logo click handler
-    document.querySelector('a[href="/"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    var logoLink = document.querySelector('a[href="#top"]');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
 
     // Countdown timer for CTA section
-    const countdownDate = document.getElementById('countdown-date');
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
-
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    var countdownDate = document.getElementById('countdown-date');
+    if (countdownDate) {
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        countdownDate.textContent = futureDate.toLocaleDateString('en-US', options);
+    }
 
     // Simple animation trigger on scroll
-    const observerOptions = {
+    var observerOptions = {
         threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    var observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fadeIn');
@@ -1599,8 +1620,8 @@ nu
 
 <script>
     // Header scroll behavior
-    let lastScroll = 0;
-    const header = document.querySelector('header');
+    var lastScroll = 0;
+    var header = document.querySelector('header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
